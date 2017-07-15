@@ -4,15 +4,11 @@ from PIL import Image
 from PIL import ImageTk
 import os
 
-class Imagen:
-    def __init__(self, ruta, imagen, etiqueta):
-        self.imagen = imagen
-        self.ruta = ruta
-        self.etiqueta = etiqueta.split(',')+['todos']
-
 class Proceso:
     def __init__(self):
+        self.ruta = []
         self.lista = []
+        self.etiquetas = []
         self.comprobar_archivo()
         self.cargar()
     def lista_imagenes(self, ruta):
@@ -24,9 +20,14 @@ class Proceso:
                 pass
         return resultados
     def agregar_imagen(self, ruta, imagen, etiqueta):
-        libreria = open(os.path.dirname(os.path.realpath(__file__))+'/libreria.txt', 'a')
-        self.lista.append(Imagen(ruta, imagen, etiqueta))
-        libreria.write(ruta+'%'+imagen+'%'+etiqueta+'\n')
+        if imagen not in self.lista:
+            libreria = open(os.path.dirname(os.path.realpath(__file__))+'/libreria.txt', 'a')
+            self.ruta.append(ruta)
+            self.lista.append(imagen)
+            self.etiquetas.append(etiqueta.split(',')+['todos'])
+            libreria.write(ruta+'%'+imagen+'%'+etiqueta+'%'+str(self.lista.index(imagen))+'\n')
+        else:
+            pass
     def comprobar_archivo(self):
         if os.path.isfile(os.path.dirname(os.path.realpath(__file__))+'/libreria.txt'):
             pass
@@ -36,13 +37,15 @@ class Proceso:
         libreria = open(os.path.dirname(os.path.realpath(__file__))+'/libreria.txt', 'r')
         for linea in libreria:
             linea = linea.rstrip().split('%')
-            self.lista.append(Imagen(linea[0], linea[1], linea[2]))
+            self.ruta.append(linea[0])
+            self.lista.append(linea[1])
+            self.etiquetas.append(linea[2])
     def buscar(self, etiqueta_buscar):
-        resultados=[]
-        etiqueta_buscar = [i.lower() for i in etiqueta_buscar.split(',')]
-        for imagen in self.lista:
-            if any(i.lower() in etiqueta_buscar for i in imagen.etiqueta):
-                resultados.append(imagen)
+        resultados=[[],[]]
+        for etiqueta in self.etiquetas:
+            if any(i.lower() in etiqueta_buscar for i in etiqueta):
+                resultados[0].append(self.ruta[self.etiquetas.index(etiqueta)])
+                resultados[1].append(self.lista[self.etiquetas.index(etiqueta)])
             else:
                 pass
         return resultados
@@ -117,8 +120,8 @@ class Ventana:
         def resultados(lista_imagenes, cuadro):
             for cosas in cuadro.winfo_children():
                 cosas.destroy()
-            for n in range(len(lista_imagenes)):
-                img = Image.open(lista_imagenes[n].ruta + '/' + lista_imagenes[n].imagen)
+            for n in range(len(lista_imagenes[0])):
+                img = Image.open(lista_imagenes[0][n] + '/' + lista_imagenes[1][n])
                 img = img.resize((140, 150), Image.ANTIALIAS)
                 img = ImageTk.PhotoImage(img)
                 label = Label(cuadro, image=img)
